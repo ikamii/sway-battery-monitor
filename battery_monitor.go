@@ -33,7 +33,7 @@ func main() {
 	config := &Config{
 		Threshold:      *threshold,
 		CheckInterval:  *checkInterval,
-		NotifyCommand:  "notify-send",
+		NotifyCommand:  "zenity",
 		BatteryPath:    *batteryPath,
 		CooldownPeriod: time.Duration(*cooldown) * time.Second,
 	}
@@ -94,11 +94,27 @@ func sendNotification(command string, batteryPercent int) {
 	title := "Low Battery"
 	message := fmt.Sprintf("Battery level is at %d%%", batteryPercent)
 
-	cmd := exec.Command(command, "-u", "critical", "-i", "battery-low", title, message)
-	err := cmd.Run()
+	cmd := exec.Command(command, "--warning", "--text", message, "--width=300", "--height=100", "--title", title)
+	cmd.Env = append(os.Environ(), "GTK_THEME=Adwaita:dark")
+	err := cmd.Start()
 	if err != nil {
 		log.Printf("Failed to send notification %v", err)
-	} else {
-		log.Printf("Notification sent: %s", message)
+		return
+	}
+
+	// Check for charging status to dismiss notiification
+	for {
+		_, charging, err := getBatteryInfo("/sys/class/power_supply/BAT0")
+		if err != nil {
+			log.Printf("Error reading batter info: %v", err)
+			break
+		}
+
+		if charging {
+			cmd.Process.Kill()
+			break
+		}
+
+		time.Sleep(2 * time.Second)
 	}
 }
