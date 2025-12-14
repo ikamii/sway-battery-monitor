@@ -106,7 +106,7 @@ func sendNotification(command string, batteryPercent int, batteryPath string) {
 	for {
 		_, charging, err := getBatteryInfo(batteryPath)
 		if err != nil {
-			log.Printf("Error reading batter info: %v", err)
+			log.Printf("Error reading battery info: %v", err)
 			break
 		}
 
