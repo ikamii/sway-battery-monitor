@@ -51,7 +51,7 @@ func main() {
 			// Check if notification should be sent
 			if batteryPercent <= config.Threshold && !charging {
 				if time.Since(config.LastNotifiedAt) >= config.CooldownPeriod {
-					sendNotification(config.NotifyCommand, batteryPercent)
+					sendNotification(config.NotifyCommand, batteryPercent, *batteryPath)
 					config.LastNotifiedAt = time.Now()
 				}
 			}
@@ -90,7 +90,7 @@ func getBatteryInfo(batteryPath string) (int, bool, error) {
 }
 
 // Sennds a desktop notification
-func sendNotification(command string, batteryPercent int) {
+func sendNotification(command string, batteryPercent int, batteryPath string) {
 	title := "Low Battery"
 	message := fmt.Sprintf("Battery level is at %d%%", batteryPercent)
 
@@ -104,9 +104,9 @@ func sendNotification(command string, batteryPercent int) {
 
 	// Check for charging status to dismiss notiification
 	for {
-		_, charging, err := getBatteryInfo("/sys/class/power_supply/BAT0")
+		_, charging, err := getBatteryInfo(batteryPath)
 		if err != nil {
-			log.Printf("Error reading batter info: %v", err)
+			log.Printf("Error reading battery info: %v", err)
 			break
 		}
 
